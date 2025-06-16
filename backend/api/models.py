@@ -3,17 +3,18 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .managers import CustomUserManager
 
 
+class Role(models.TextChoices):
+    JOBSEEKER = 'jobseeker', ('Jobseeker')
+    EMPLOYER = 'employer', ('Employer')
+
+
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    ROLE_CHOICES = [
-        ("JOBSEEKER", "Job Seeker"),
-        ("EMPLOYER", "Employer"),
-    ]
 
     fname = models.CharField(max_length=40)
     lname = models.CharField(max_length=40)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=15)
-    role = models.CharField(max_length=15, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=15, choices=Role.choices)
 
     is_active = models.BooleanField(default=True)  # Required for login
     is_staff = models.BooleanField(default=False)  # Required for admin
