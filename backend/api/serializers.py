@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser
+from .models import JobSeeker, Employer
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -37,3 +38,15 @@ class SignupSerializer(serializers.ModelSerializer):
         user = CustomUser.objects.create_user(**validated_data)
 
         return user
+
+
+class JobSeekerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobSeeker
+        fields = ['id', 'user', 'resume', 'skills']
+
+
+class EmployerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employer
+        fields = ['id', 'user', 'company_name']

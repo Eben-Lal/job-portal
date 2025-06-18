@@ -26,3 +26,22 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.fname} {self.lname} ({self.role})"
+
+
+class JobSeeker(models.Model):
+    user = models.OneToOneField(
+        CustomUser, on_delete=models.CASCADE, related_name='jobseeker_profile')
+    resume = models.FileField(upload_to='resumes/', blank=True, null=True)
+    skills = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"Jobseeker: {self.user.email}"
+
+
+class Employer(models.Model):
+    user = models.OneToOneField(
+        CustomUser, on_delete=models.CASCADE, related_name='employer_profile')
+    company_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"Employer: {self.user.email} ({self.company_name})"
