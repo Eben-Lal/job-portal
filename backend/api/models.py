@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .managers import CustomUserManager
+from django.utils import timezone
+from django.conf import settings
+from django.apps import apps
 
 
 class Role(models.TextChoices):
@@ -45,3 +48,21 @@ class Employer(models.Model):
 
     def __str__(self):
         return f"Employer: {self.user.email} ({self.company_name})"
+
+
+class Application(models.Model):
+    job = models.ForeignKey(
+        'jobapp.Job',  # use app_name.ModelName as a string
+        on_delete=models.CASCADE,
+        related_name='applications'
+    )
+    seeker = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='applications')
+    applied_at = models.DateTimeField(default=timezone.now)
+    cover_letter = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = ('job', 'seeker')  # prevent duplicate applications
+
+    def __str__(self):
+        return f"{self.seeker.email} applied to {self.job.title}"

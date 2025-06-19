@@ -3,6 +3,7 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser
 from .models import JobSeeker, Employer
+from .models import Application
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -50,3 +51,10 @@ class EmployerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employer
         fields = ['id', 'user', 'company_name']
+
+
+class ApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Application
+        fields = ['id', 'job', 'cover_letter', 'applied_at']
+        read_only_fields = ['applied_at']

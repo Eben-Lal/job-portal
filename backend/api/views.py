@@ -2,18 +2,27 @@
 # Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
+# from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .serializers import SignupSerializer
-from .models import CustomUser
+# from .models import CustomUser
 from django.conf import settings
-import jwt
-from datetime import datetime, timedelta
+# import jwt
+# from datetime import datetime, timedelta
 from .serializers import CustomUserSerializer
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, generics
 from .models import JobSeeker, Employer
 from .serializers import JobSeekerSerializer, EmployerSerializer
+from rest_framework import filters
+from rest_framework import generics
+from jobapp.models import Job
+from jobapp.serializers import JobSerializer
+from .models import Application
+from .serializers import ApplicationSerializer
+from rest_framework import permissions
+from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied
 
 
 class SignupView(APIView):
@@ -63,3 +72,42 @@ class EmployerViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class JobSearchView(generics.ListAPIView):
+    queryset = Job.objects.all()
+    permission_classes = [IsAuthenticated]
+    serializer_class = JobSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+
+
+class ApplyToJobView(generics.CreateAPIView):
+    queryset = Application.objects.all()
+    serializer_class = ApplicationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        seeker = self.request.user
+        job = serializer.validated_data['job']
+
+        #  Prevent duplicate applications
+        if Application.objects.filter(job=job, seeker=seeker).exists():
+            raise ValidationError("You have already applied to this job.")
+
+        serializer.save(seeker=seeker)
+
+
+class EmployerApplicationsView(generics.ListAPIView):
+    serializer_class = ApplicationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # ✅ Allow only employers to view
+        if not hasattr(user, 'employer_profile'):
+            raise PermissionDenied("Only employers can view applications.")
+
+        # ✅ Filter applications only for jobs posted by this employer
+        return Application.objects.filter(job__employer=user.employer_profile)

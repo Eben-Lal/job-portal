@@ -1,13 +1,20 @@
-from rest_framework import viewsets, permissions
+
+from rest_framework import viewsets
+
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from .models import Job
 from .serializers import JobSerializer
+from .permissions import IsEmployerOwner
 
 
 class JobViewSet(viewsets.ModelViewSet):
-    queryset = Job.objects.all()
     serializer_class = JobSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmployerOwner]
+
+    def get_queryset(self):
+        # All logged-in users can see all jobs
+        return Job.objects.all()
 
     def perform_create(self, serializer):
         if hasattr(self.request.user, 'employer_profile'):
